@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grahita Pustaka - SDN Ketegan Rejoso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .heading-font {
+            font-family: 'Nunito', sans-serif;
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background-color: white; }
+            .print-hidden { display: none !important; }
+            .print-block { display: block !important; }
+            .print-w-full { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .print-border { border: 1px solid #000 !important; }
+            .print-text-black { color: black !important; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid black !important; padding: 8px !important; color: black !important; }
+            .no-print-border { border: none !important; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c5c5c5; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+
+        .tree-line::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 2px;
+            height: 20px;
+            background-color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- ICONS (SVG) ---
+        const Icons = {
+            Home: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>,
+            Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>,
+            Book: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>,
+            Clipboard: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>,
+            UserPlus: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>,
+            Printer: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>,
+            Chart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>,
+            Trash: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
+            Edit: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>,
+            AlertCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+            Check: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>,
+            LogOut: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+        };
+
+        const CustomLogo = ({ className }) => (
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+                <defs>
+                    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#1E3A8A" />
+                        <stop offset="100%" stopColor="#0F172A" />
+                    </linearGradient>
+                    <linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FEF08A" />
+                        <stop offset="100%" stopColor="#F59E0B" />
+                    </linearGradient>
+                    <linearGradient id="leafGradLeft" x1="1" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#34D399" />
+                        <stop offset="100%" stopColor="#047857" />
+                    </linearGradient>
+                    <linearGradient id="leafGradRight" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#34D399" />
+                        <stop offset="100%" stopColor="#047857" />
+                    </linearGradient>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="8" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                {/* Base Shield/Circle */}
+                <circle cx="100" cy="100" r="95" fill="url(#bgGrad)" stroke="#FBBF24" strokeWidth="4" />
+                <circle cx="100" cy="100" r="85" fill="none" stroke="#FBBF24" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+
+                {/* Sun (Grahita / Pencerahan) */}
+                <circle cx="100" cy="75" r="32" fill="url(#sunGrad)" filter="url(#glow)" />
+                
+                {/* Sun Rays */}
+                <g stroke="#FDE047" strokeWidth="3" strokeLinecap="round" opacity="0.8">
+                    <line x1="100" y1="25" x2="100" y2="35" />
+                    <line x1="135" y1="40" x2="128" y2="47" />
+                    <line x1="150" y1="75" x2="140" y2="75" />
+                    <line x1="135" y1="110" x2="128" y2="103" />
+                    <line x1="65" y1="40" x2="72" y2="47" />
+                    <line x1="50" y1="75" x2="60" y2="75" />
+                    <line x1="65" y1="110" x2="72" y2="103" />
+                </g>
+
+                {/* Leaves (Taman Bacaan / Pertumbuhan) */}
+                <path d="M100 135 C 50 135, 25 90, 45 65 C 60 85, 80 100, 100 115 Z" fill="url(#leafGradLeft)" />
+                <path d="M100 135 C 150 135, 175 90, 155 65 C 140 85, 120 100, 100 115 Z" fill="url(#leafGradRight)" />
+
+                {/* Book (Pustaka / Pondasi) */}
+                {/* Book Cover */}
+                <path d="M100 165 L30 140 L30 150 L100 175 Z" fill="#3B82F6" />
+                <path d="M100 165 L170 140 L170 150 L100 175 Z" fill="#2563EB" />
+                {/* Book Pages Underneath */}
+                <path d="M100 140 L35 125 L35 140 L100 165 Z" fill="#F8FAFC" />
+                <path d="M100 140 L165 125 L165 140 L100 165 Z" fill="#E2E8F0" />
+                {/* Book Pages Top */}
+                <path d="M100 135 L40 120 L40 130 L100 150 Z" fill="#FFFFFF" />
+                <path d="M100 135 L160 120 L160 130 L100 150 Z" fill="#F1F5F9" />
+                
+                {/* Bookmark (Pita Pembatas) */}
+                <path d="M95 145 L105 145 L105 180 L100 175 L95 180 Z" fill="#EF4444" />
+                
+                {/* Center Crease (Garis Tengah Buku) */}
+                <line x1="100" y1="135" x2="100" y2="165" stroke="#CBD5E1" strokeWidth="2" />
+            </svg>
+        );
+
+        // --- COMPONENTS ---
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 print-hidden">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto transform transition-all">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-gray-800 heading-font">{title}</h3>
+                            <button onClick={onClose} className="text-gray-500 hover:text-red-500 transition-colors">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+        const AlertModal = ({ isOpen, onClose, title, message, type = 'info' }) => {
+            if (!isOpen) return null;
+            const colors = {
+                error: 'text-red-600',
+                success: 'text-green-600',
+                info: 'text-blue-600'
+            };
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-[60] print-hidden">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 text-center">
+                        <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${type === 'error' ? 'bg-red-100' : type === 'success' ? 'bg-green-100' : 'bg-blue-100'} mb-4`}>
+                            {type === 'error' ? <Icons.AlertCircle /> : <Icons.Check />}
+                        </div>
+                        <h3 className={`text-lg font-bold ${colors[type]}`}>{title}</h3>
+                        <p className="text-gray-600 mt-2 mb-6">{message}</p>
+                        <button onClick={onClose} className="w-full bg-gray-800 text-white rounded-lg px-4 py-2 hover:bg-gray-700 transition">Tutup</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-[60] print-hidden">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
+                        <p className="text-gray-600 mb-6">{message}</p>
+                        <div className="flex justify-end space-x-3">
+                            <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition">Batal</button>
+                            <button onClick={() => { onConfirm(); onClose(); }} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition">Hapus</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APPLICATION ---
+
+        const App = () => {
+            // Helper untuk menyimpan data di memori browser (Local Storage)
+            const loadData = (key, defaultData) => {
+                const saved = localStorage.getItem(key);
+                if (saved) return JSON.parse(saved);
+                return defaultData;
+            };
+
+            // State dengan Local Storage agar data tidak hilang saat direfresh / ditutup
+            const [members, setMembers] = useState(() => loadData('grahita_members', [
+                { id: 'A001', name: 'Budi Santoso', kelas: '6A', jabatan: 'Siswa' },
+                { id: 'A002', name: 'Siti Aminah', kelas: '-', jabatan: 'Guru' }
+            ]));
+            const [books, setBooks] = useState(() => loadData('grahita_books', [
+                { id: 'B001', title: 'Matematika Dasar', author: 'Andi S.', publisher: 'Erlangga', year: 2021, pages: 120, condition: 'baik' },
+                { id: 'B002', title: 'Sejarah Indonesia', author: 'Budi P.', publisher: 'Balai Pustaka', year: 2019, pages: 200, condition: 'rusak sedang' },
+                { id: 'B003', title: 'Matematika Dasar', author: 'Andi S.', publisher: 'Erlangga', year: 2021, pages: 120, condition: 'baik' },
+            ]));
+            const [transactions, setTransactions] = useState(() => loadData('grahita_transactions', [
+                { id: 1, memberId: 'A001', memberName: 'Budi Santoso', bookId: 'B001', bookTitle: 'Matematika Dasar', borrowDate: '2026-10-01', returnDate: '2026-10-08', status: 'kembali', note: 'Tepat waktu' }
+            ]));
+            const [guests, setGuests] = useState(() => loadData('grahita_guests', [
+                { id: 1, date: '2026-11-18', time: '09:00', memberId: 'A001', name: 'Budi Santoso', jabatan: 'Siswa', purpose: 'Membaca buku di tempat' }
+            ]));
+
+            // Auth State
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [appPassword, setAppPassword] = useState(() => loadData('grahita_password', 'grahita123')); // Default password
+            
+            // Simpan otomatis ke browser setiap ada perubahan data (Tambah/Edit/Hapus)
+            useEffect(() => { localStorage.setItem('grahita_members', JSON.stringify(members)); }, [members]);
+            useEffect(() => { localStorage.setItem('grahita_books', JSON.stringify(books)); }, [books]);
+            useEffect(() => { localStorage.setItem('grahita_transactions', JSON.stringify(transactions)); }, [transactions]);
+            useEffect(() => { localStorage.setItem('grahita_guests', JSON.stringify(guests)); }, [guests]);
+            useEffect(() => { localStorage.setItem('grahita_password', JSON.stringify(appPassword)); }, [appPassword]);
+
+            // App State
+            const [currentView, setCurrentView] = useState('beranda');
+            const [alert, setAlert] = useState({ isOpen: false, title: '', message: '', type: 'info' });
+            
+            const showAlert = (title, message, type = 'info') => {
+                setAlert({ isOpen: true, title, message, type });
+            };
+
+            const formatTanggal = (dateString) => {
+                if (!dateString) return '-';
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString('id-ID', options);
+            };
+
+            // Login Component
+            if (!isLoggedIn) {
+                return <LoginScreen onLogin={(pass) => {
+                    if(pass === appPassword) setIsLoggedIn(true);
+                    else showAlert("Gagal Login", "Password yang Anda masukkan salah!", "error");
+                }} 
+                onChangePassword={(oldPass, newPass) => {
+                    if(oldPass === appPassword) {
+                        setAppPassword(newPass);
+                        showAlert("Berhasil", "Password berhasil diubah!", "success");
+                    } else {
+                        showAlert("Gagal", "Password lama salah!", "error");
+                    }
+                }}
+                alert={alert} setAlert={setAlert} AlertModal={AlertModal} />;
+            }
+
+            return (
+                <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
+                    {/* Sidebar */}
+                    <aside className="w-64 bg-gradient-to-b from-blue-700 to-indigo-900 text-white flex flex-col print-hidden shadow-2xl z-10 transition-all duration-300">
+                        <div className="p-6 flex flex-col items-center border-b border-blue-600/50">
+                            <CustomLogo className="h-24 w-24 mb-3 drop-shadow-md" />
+                            <h1 className="text-xl font-bold heading-font text-center tracking-wide text-yellow-300 drop-shadow-sm">GRAHITA PUSTAKA</h1>
+                            <p className="text-xs text-blue-200 mt-1">SDN Ketegan Rejoso</p>
+                        </div>
+                        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-3">
+                            <NavItem icon={<Icons.Home />} label="Beranda" active={currentView === 'beranda'} onClick={() => setCurrentView('beranda')} />
+                            <NavItem icon={<Icons.Users />} label="Pengurus" active={currentView === 'pengurus'} onClick={() => setCurrentView('pengurus')} />
+                            <NavItem icon={<Icons.UserPlus />} label="Anggota" active={currentView === 'anggota'} onClick={() => setCurrentView('anggota')} />
+                            <NavItem icon={<Icons.Book />} label="Katalog Buku" active={currentView === 'katalog'} onClick={() => setCurrentView('katalog')} />
+                            <NavItem icon={<Icons.Clipboard />} label="Transaksi" active={currentView === 'transaksi'} onClick={() => setCurrentView('transaksi')} />
+                            <NavItem icon={<Icons.Clipboard />} label="Buku Tamu" active={currentView === 'bukutamu'} onClick={() => setCurrentView('bukutamu')} />
+                            <NavItem icon={<Icons.Printer />} label="Laporan" active={currentView === 'laporan'} onClick={() => setCurrentView('laporan')} />
+                        </nav>
+                        <div className="p-4 border-t border-blue-600/50">
+                            <button onClick={() => setIsLoggedIn(false)} className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl hover:bg-red-500 hover:text-white transition-all text-blue-200 group">
+                                <Icons.LogOut />
+                                <span className="font-semibold group-hover:tracking-wider transition-all">Keluar</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 flex flex-col h-screen overflow-hidden relative print-w-full">
+                        <header className="bg-white shadow-sm px-8 py-4 flex justify-between items-center print-hidden z-0">
+                            <h2 className="text-2xl font-bold text-gray-800 heading-font capitalize drop-shadow-sm">
+                                {currentView.replace(/([A-Z])/g, ' $1').trim()}
+                            </h2>
+                            <div className="flex items-center space-x-4">
+                                <span className="text-sm font-medium bg-blue-100 text-blue-800 py-1 px-3 rounded-full border border-blue-200">
+                                    {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </span>
+                            </div>
+                        </header>
+                        
+                        <div className="flex-1 overflow-auto p-4 md:p-8 relative print-w-full print:p-0">
+                            {currentView === 'beranda' && <Beranda members={members} books={books} transactions={transactions} guests={guests} />}
+                            {currentView === 'pengurus' && <Pengurus />}
+                            {currentView === 'anggota' && <Anggota members={members} setMembers={setMembers} showAlert={showAlert} ConfirmModal={ConfirmModal} Modal={Modal} Icons={Icons} />}
+                            {currentView === 'katalog' && <Katalog books={books} setBooks={setBooks} showAlert={showAlert} ConfirmModal={ConfirmModal} Modal={Modal} Icons={Icons} />}
+                            {currentView === 'transaksi' && <Transaksi transactions={transactions} setTransactions={setTransactions} members={members} books={books} showAlert={showAlert} ConfirmModal={ConfirmModal} Modal={Modal} Icons={Icons} />}
+                            {currentView === 'bukutamu' && <BukuTamu guests={guests} setGuests={setGuests} members={members} showAlert={showAlert} ConfirmModal={ConfirmModal} Modal={Modal} Icons={Icons} />}
+                            {currentView === 'laporan' && <Laporan members={members} books={books} transactions={transactions} guests={guests} Icons={Icons} formatTanggal={formatTanggal} />}
+                        </div>
+                    </main>
+
+                    <AlertModal {...alert} onClose={() => setAlert({ ...alert, isOpen: false })} />
+                </div>
+            );
+        };
+
+        const NavItem = ({ icon, label, active, onClick }) => (
+            <button onClick={onClick} className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all duration-200 ${active ? 'bg-white text-blue-800 shadow-lg scale-[1.02]' : 'hover:bg-blue-600/50 hover:pl-6'}`}>
+                {icon}
+                <span className="font-semibold">{label}</span>
+            </button>
+        );
+
+        // --- SUB VIEWS ---
+
+        const LoginScreen = ({ onLogin, onChangePassword, alert, setAlert, AlertModal }) => {
+            const [mode, setMode] = useState('login');
+            const [pass, setPass] = useState('');
+            const [oldPass, setOldPass] = useState('');
+            const [newPass, setNewPass] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (mode === 'login') onLogin(pass);
+                else {
+                    onChangePassword(oldPass, newPass);
+                    setMode('login');
+                    setPass('');
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-800 p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-pink-500 to-green-400"></div>
+                        <div className="flex flex-col items-center mb-8">
+                            <CustomLogo className="h-32 w-32 mb-4 drop-shadow-xl" />
+                            <h1 className="text-2xl font-extrabold text-gray-800 heading-font text-center">Grahita Pustaka</h1>
+                            <p className="text-sm text-gray-500">SDN Ketegan Rejoso</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            {mode === 'login' ? (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Password Akses</label>
+                                    <input type="password" required value={pass} onChange={e => setPass(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Masukkan password..." />
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Password Lama</label>
+                                        <input type="password" required value={oldPass} onChange={e => setOldPass(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
+                                        <input type="password" required value={newPass} onChange={e => setNewPass(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    </div>
+                                </>
+                            )}
+                            <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-all active:scale-95 shadow-lg">
+                                {mode === 'login' ? 'Masuk Aplikasi' : 'Simpan Password Baru'}
+                            </button>
+                        </form>
+                        
+                        <div className="mt-6 text-center">
+                            <button onClick={() => setMode(mode === 'login' ? 'change' : 'login')} className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                                {mode === 'login' ? 'Ganti Password?' : 'Kembali ke Login'}
+                            </button>
+                        </div>
+                    </div>
+                    <AlertModal {...alert} onClose={() => setAlert({ ...alert, isOpen: false })} />
+                </div>
+            );
+        };
+
+        const Beranda = ({ members, books, transactions, guests }) => {
+            const borrowedCount = transactions.filter(t => t.status === 'dipinjam').length;
+            const todayGuests = guests.filter(g => g.date === new Date().toISOString().split('T')[0]).length;
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-300 rounded-full blur-3xl opacity-20 -mr-20 -mt-20"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-400 rounded-full blur-3xl opacity-20 -ml-20 -mb-20"></div>
+                        
+                        <CustomLogo className="h-32 w-32 md:h-48 md:w-48 drop-shadow-2xl relative z-10" />
+                        <div className="text-center md:text-left relative z-10">
+                            <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 heading-font mb-2">Selamat Datang di <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Grahita Pustaka</span></h1>
+                            <p className="text-lg text-gray-600 mb-4">Aplikasi Interaktif Perpustakaan SDN Ketegan Rejoso</p>
+                            <span className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold text-sm shadow-sm border border-green-200">Sistem Aktif & Siap Digunakan</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <StatCard title="Total Anggota" value={members.length} icon={<Icons.Users />} color="bg-blue-500" />
+                        <StatCard title="Total Buku Fisik" value={books.length} icon={<Icons.Book />} color="bg-pink-500" />
+                        <StatCard title="Buku Dipinjam" value={borrowedCount} icon={<Icons.Clipboard />} color="bg-orange-500" />
+                        <StatCard title="Pengunjung Hari Ini" value={todayGuests} icon={<Icons.Chart />} color="bg-green-500" />
+                    </div>
+                </div>
+            );
+        };
+
+        const StatCard = ({ title, value, icon, color }) => (
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 flex items-center space-x-4 hover:-translate-y-1 transition-transform duration-300">
+                <div className={`${color} text-white p-4 rounded-2xl shadow-inner`}>
+                    {icon}
+                </div>
+                <div>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{title}</p>
+                    <h3 className="text-3xl font-extrabold text-gray-800 heading-font">{value}</h3>
+                </div>
+            </div>
+        );
+
+        const Pengurus = () => {
+            return (
+                <div className="bg-white rounded-3xl p-8 shadow-xl min-h-[70vh]">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-800 heading-font mb-2">Bagan Pengurus Perpustakaan</h2>
+                        <p className="text-gray-500">Struktur Organisasi Grahita Pustaka</p>
+                    </div>
+
+                    <div className="flex flex-col items-center space-y-12">
+                        {/* Penanggung Jawab */}
+                        <div className="flex flex-col items-center">
+                            <OrgCard title="Penanggung Jawab" name="Maria Wafda, S.Pd.SD" color="bg-purple-100 border-purple-400 text-purple-900" />
+                            <div className="w-0.5 h-12 bg-gray-300"></div>
+                            <OrgCard title="Kepala Perpustakaan" name="Fiky Anjani, S.Pd" color="bg-blue-100 border-blue-400 text-blue-900" />
+                            <div className="w-0.5 h-12 bg-gray-300"></div>
+                        </div>
+
+                        {/* Divisi */}
+                        <div className="relative flex justify-center pt-6">
+                            <div className="absolute top-0 w-3/4 h-0.5 bg-gray-300"></div>
+                            
+                            <div className="flex flex-col md:flex-row space-y-8 md:space-y-0 md:space-x-12">
+                                <div className="relative pt-6 flex flex-col items-center">
+                                    <div className="absolute top-0 w-0.5 h-6 bg-gray-300"></div>
+                                    <OrgCard title="Pengadaan" name="Sayyidah Aminah, S.Pd" color="bg-green-100 border-green-400 text-green-900" />
+                                </div>
+                                <div className="relative pt-6 flex flex-col items-center">
+                                    <div className="absolute top-0 w-0.5 h-6 bg-gray-300"></div>
+                                    <OrgCard title="Pengolahan" name="Dawin Hidayat, S.Kom" color="bg-orange-100 border-orange-400 text-orange-900" />
+                                </div>
+                                <div className="relative pt-6 flex flex-col items-center">
+                                    <div className="absolute top-0 w-0.5 h-6 bg-gray-300"></div>
+                                    <OrgCard title="Layanan" name="Sukirno, S.Pd" color="bg-pink-100 border-pink-400 text-pink-900" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const OrgCard = ({ title, name, color }) => (
+            <div className={`px-6 py-4 rounded-xl border-2 shadow-md min-w-[200px] text-center z-10 ${color}`}>
+                <h4 className="font-bold text-sm uppercase tracking-wider mb-1 opacity-80">{title}</h4>
+                <p className="font-extrabold text-lg heading-font">{name}</p>
+            </div>
+        );
+
+        // --- CRUD Components (Anggota & Katalog) ---
+
+        const Anggota = ({ members, setMembers, showAlert, ConfirmModal, Modal, Icons }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editId, setEditId] = useState(null);
+            const [formData, setFormData] = useState({ id: '', name: '', kelas: '', jabatan: 'Siswa' });
+            const [confirmOpen, setConfirmOpen] = useState(false);
+            const [deleteId, setDeleteId] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const openModal = (member = null) => {
+                if (member) {
+                    setFormData(member);
+                    setEditId(member.id);
+                } else {
+                    setFormData({ id: '', name: '', kelas: '', jabatan: 'Siswa' });
+                    setEditId(null);
+                }
+                setIsModalOpen(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (editId) {
+                    setMembers(members.map(m => m.id === editId ? formData : m));
+                    showAlert("Sukses", "Data anggota berhasil diubah.", "success");
+                } else {
+                    if (members.find(m => m.id === formData.id)) {
+                        showAlert("Error", "ID Anggota sudah terdaftar!", "error");
+                        return;
+                    }
+                    setMembers([...members, formData]);
+                    showAlert("Sukses", "Anggota baru berhasil ditambahkan.", "success");
+                }
+                setIsModalOpen(false);
+            };
+
+            const handleDelete = () => {
+                setMembers(members.filter(m => m.id !== deleteId));
+                showAlert("Terhapus", "Data anggota berhasil dihapus.", "info");
+            };
+
+            const filtered = members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.id.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            return (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
+                        <input type="text" placeholder="Cari Anggota (Nama / ID)..." className="w-full sm:w-64 px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        <button onClick={() => openModal()} className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center space-x-2">
+                            <Icons.UserPlus /> <span>Tambah Anggota</span>
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 text-gray-700 uppercase text-sm font-bold border-b border-gray-200">
+                                    <th className="p-4">ID Anggota</th>
+                                    <th className="p-4">Nama Lengkap</th>
+                                    <th className="p-4">Kelas</th>
+                                    <th className="p-4">Jabatan</th>
+                                    <th className="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-gray-700">
+                                {filtered.length === 0 ? <tr><td colSpan="5" className="p-4 text-center text-gray-500">Tidak ada data anggota</td></tr> : null}
+                                {filtered.map(m => (
+                                    <tr key={m.id} className="hover:bg-blue-50/50 transition">
+                                        <td className="p-4 font-semibold text-blue-600">{m.id}</td>
+                                        <td className="p-4">{m.name}</td>
+                                        <td className="p-4">{m.kelas || '-'}</td>
+                                        <td className="p-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${m.jabatan === 'Guru' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{m.jabatan}</span></td>
+                                        <td className="p-4 flex justify-center space-x-2">
+                                            <button onClick={() => openModal(m)} className="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200"><Icons.Edit /></button>
+                                            <button onClick={() => { setDeleteId(m.id); setConfirmOpen(true); }} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><Icons.Trash /></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Edit Data Anggota" : "Tambah Anggota Baru"}>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">ID Anggota</label><input required disabled={!!editId} type="text" value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100" /></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Nama Lengkap</label><input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Kelas (Kosongi jika Guru)</label><input type="text" value={formData.kelas} onChange={e => setFormData({...formData, kelas: e.target.value})} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Jabatan</label>
+                                <select required value={formData.jabatan} onChange={e => setFormData({...formData, jabatan: e.target.value})} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="Siswa">Siswa</option>
+                                    <option value="Guru">Guru</option>
+                                    <option value="Staf">Staf</option>
+                                </select>
+                            </div>
+                            <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition mt-4">Simpan Data</button>
+                        </form>
+                    </Modal>
+
+                    <ConfirmModal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={handleDelete} title="Hapus Anggota" message="Yakin ingin menghapus anggota ini? Data transaksi terkait mungkin terdampak." />
+                </div>
+            );
+        };
+
+        const Katalog = ({ books, setBooks, showAlert, ConfirmModal, Modal, Icons }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editId, setEditId] = useState(null);
+            const initialForm = { id: '', title: '', author: '', publisher: '', year: '', pages: '', condition: 'baik' };
+            const [formData, setFormData] = useState(initialForm);
+            const [confirmOpen, setConfirmOpen] = useState(false);
+            const [deleteId, setDeleteId] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const openModal = (book = null) => {
+                if (book) { setFormData(book); setEditId(book.id); }
+                else { setFormData(initialForm); setEditId(null); }
+                setIsModalOpen(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (editId) {
+                    setBooks(books.map(b => b.id === editId ? formData : b));
+                    showAlert("Sukses", "Data buku berhasil diubah.", "success");
+                } else {
+                    if (books.find(b => b.id === formData.id)) {
+                        showAlert("Error", "ID Buku sudah ada!", "error"); return;
+                    }
+                    setBooks([...books, formData]);
+                    showAlert("Sukses", "Buku baru ditambahkan.", "success");
+                }
+                setIsModalOpen(false);
+            };
+
+            const handleDelete = () => {
+                setBooks(books.filter(b => b.id !== deleteId));
+                showAlert("Terhapus", "Buku dihapus dari katalog.", "info");
+            };
+
+            const filtered = books.filter(b => b.title.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            const getConditionColor = (cond) => {
+                switch(cond) {
+                    case 'baik': return 'bg-green-100 text-green-700';
+                    case 'rusak kecil': return 'bg-yellow-100 text-yellow-700';
+                    case 'rusak sedang': return 'bg-orange-100 text-orange-700';
+                    case 'rusak berat': return 'bg-red-100 text-red-700';
+                    default: return 'bg-gray-100 text-gray-700';
+                }
+            };
+
+            return (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
+                        <input type="text" placeholder="Cari Buku (Judul / ID)..." className="w-full sm:w-64 px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                        <button onClick={() => openModal()} className="w-full sm:w-auto bg-pink-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-pink-700 transition flex items-center justify-center space-x-2">
+                            <Icons.Book /> <span>Tambah Buku Fisik</span>
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                        <table className="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 text-gray-700 uppercase font-bold border-b border-gray-200">
+                                    <th className="p-4">ID Buku</th>
+                                    <th className="p-4 min-w-[200px]">Judul Buku</th>
+                                    <th className="p-4">Pengarang & Penerbit</th>
+                                    <th className="p-4 text-center">Tahun/Hal</th>
+                                    <th className="p-4 text-center">Kondisi</th>
+                                    <th className="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-gray-700">
+                                {filtered.length === 0 ? <tr><td colSpan="6" className="p-4 text-center text-gray-500">Tidak ada data buku</td></tr> : null}
+                                {filtered.map(b => (
+                                    <tr key={b.id} className="hover:bg-pink-50/50 transition">
+                                        <td className="p-4 font-bold text-pink-600">{b.id}</td>
+                                        <td className="p-4 font-semibold">{b.title}</td>
+                                        <td className="p-4">{b.author}<br/><span className="text-xs text-gray-500">{b.publisher}</span></td>
+                                        <td className="p-4 text-center">{b.year} / {b.pages}</td>
+                                        <td className="p-4 text-center"><span className={`px-2 py-1 rounded-md text-xs font-bold capitalize whitespace-nowrap ${getConditionColor(b.condition)}`}>{b.condition}</span></td>
+                                        <td className="p-4 flex justify-center space-x-2">
+                                            <button onClick={() => openModal(b)} className="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200"><Icons.Edit /></button>
+                                            <button onClick={() => { setDeleteId(b.id); setConfirmOpen(true); }} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><Icons.Trash /></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Edit Buku" : "Tambah Buku Baru"}>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">ID Buku (Fisik)</label><input required disabled={!!editId} type="text" value={formData.id} onChange={e => setFormData({...formData, id: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none disabled:bg-gray-100" /></div>
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Kondisi</label>
+                                    <select required value={formData.condition} onChange={e => setFormData({...formData, condition: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none">
+                                        <option value="baik">Baik</option>
+                                        <option value="rusak kecil">Rusak Kecil</option>
+                                        <option value="rusak sedang">Rusak Sedang</option>
+                                        <option value="rusak berat">Rusak Berat</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div><label className="block text-xs font-bold text-gray-700 mb-1">Judul Buku</label><input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Pengarang</label><input required type="text" value={formData.author} onChange={e => setFormData({...formData, author: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Penerbit</label><input required type="text" value={formData.publisher} onChange={e => setFormData({...formData, publisher: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Tahun Terbit</label><input required type="number" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Jumlah Halaman</label><input required type="number" value={formData.pages} onChange={e => setFormData({...formData, pages: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                            </div>
+                            <button type="submit" className="w-full bg-pink-600 text-white font-bold py-3 rounded-xl hover:bg-pink-700 transition mt-4">Simpan Data Buku</button>
+                        </form>
+                    </Modal>
+
+                    <ConfirmModal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={handleDelete} title="Hapus Buku" message="Yakin ingin menghapus buku ini? Pastikan buku tidak sedang dipinjam." />
+                </div>
+            );
+        };
+
+        const Transaksi = ({ transactions, setTransactions, members, books, showAlert, ConfirmModal, Modal, Icons }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editId, setEditId] = useState(null);
+            
+            const today = new Date().toISOString().split('T')[0];
+            const initialForm = { id: '', memberId: '', memberName: '', bookId: '', bookTitle: '', borrowDate: today, returnDate: '', status: 'dipinjam', note: '' };
+            const [formData, setFormData] = useState(initialForm);
+            
+            const [confirmOpen, setConfirmOpen] = useState(false);
+            const [deleteId, setDeleteId] = useState(null);
+
+            // Auto-fill logic
+            useEffect(() => {
+                if(formData.memberId) {
+                    const m = members.find(x => x.id === formData.memberId);
+                    setFormData(prev => ({ ...prev, memberName: m ? m.name : 'Anggota Tidak Ditemukan' }));
+                } else {
+                    setFormData(prev => ({ ...prev, memberName: '' }));
+                }
+            }, [formData.memberId, members]);
+
+            useEffect(() => {
+                if(formData.bookId) {
+                    const b = books.find(x => x.id === formData.bookId);
+                    setFormData(prev => ({ ...prev, bookTitle: b ? b.title : 'Buku Tidak Ditemukan' }));
+                } else {
+                    setFormData(prev => ({ ...prev, bookTitle: '' }));
+                }
+            }, [formData.bookId, books]);
+
+            const openModal = (tx = null) => {
+                if (tx) { setFormData(tx); setEditId(tx.id); }
+                else { setFormData(initialForm); setEditId(null); }
+                setIsModalOpen(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                // Validations for New Borrowings
+                if (!editId || (editId && formData.status === 'dipinjam')) {
+                    const m = members.find(x => x.id === formData.memberId);
+                    if(!m) { showAlert("Error", "ID Anggota tidak valid!", "error"); return; }
+                    const b = books.find(x => x.id === formData.bookId);
+                    if(!b) { showAlert("Error", "ID Buku tidak valid!", "error"); return; }
+
+                    // Validation 1: Check Overdue
+                    const overdueTx = transactions.find(t => t.memberId === formData.memberId && t.status === 'dipinjam' && new Date(t.returnDate) < new Date(today) && t.id !== editId);
+                    if (overdueTx) {
+                        showAlert("Ditolak", "Anggota ini belum mengembalikan buku yang sudah melewati tenggat waktu!", "error"); return;
+                    }
+
+                    // Validation 2: Check Book Availability
+                    const bookInUse = transactions.find(t => t.bookId === formData.bookId && t.status === 'dipinjam' && t.id !== editId);
+                    if (bookInUse) {
+                        showAlert("Ditolak", "Buku ini (Fisik ID ini) sedang dipinjam oleh anggota lain!", "error"); return;
+                    }
+                }
+
+                if (editId) {
+                    setTransactions(transactions.map(t => t.id === editId ? formData : t));
+                    showAlert("Sukses", "Transaksi diperbarui.", "success");
+                } else {
+                    setTransactions([{...formData, id: Date.now()}, ...transactions]);
+                    showAlert("Sukses", "Peminjaman berhasil dicatat.", "success");
+                }
+                setIsModalOpen(false);
+            };
+
+            const handleDelete = () => {
+                setTransactions(transactions.filter(t => t.id !== deleteId));
+                showAlert("Terhapus", "Data transaksi dihapus.", "info");
+            };
+
+            const handleReturn = (id) => {
+                setTransactions(transactions.map(t => t.id === id ? { ...t, status: 'kembali' } : t));
+                showAlert("Berhasil", "Buku telah dikembalikan.", "success");
+            }
+
+            return (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-bold text-gray-800 heading-font">Sirkulasi Peminjaman</h3>
+                        <button onClick={() => openModal()} className="bg-orange-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-600 transition flex items-center space-x-2 shadow-sm">
+                            <Icons.Clipboard /> <span>Pinjam Buku Baru</span>
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                        <table className="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 text-gray-700 uppercase font-bold border-b border-gray-200">
+                                    <th className="p-4">Anggota</th>
+                                    <th className="p-4">Buku (ID)</th>
+                                    <th className="p-4">Tgl Pinjam - Kembali</th>
+                                    <th className="p-4 text-center">Status</th>
+                                    <th className="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-gray-700">
+                                {transactions.length === 0 ? <tr><td colSpan="5" className="p-4 text-center text-gray-500">Belum ada transaksi</td></tr> : null}
+                                {transactions.map(t => {
+                                    const isOverdue = t.status === 'dipinjam' && new Date(t.returnDate) < new Date(today);
+                                    return (
+                                    <tr key={t.id} className="hover:bg-orange-50/50 transition">
+                                        <td className="p-4">
+                                            <div className="font-bold text-gray-800">{t.memberName}</div>
+                                            <div className="text-xs text-gray-500">ID: {t.memberId}</div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="font-bold text-gray-800">{t.bookTitle}</div>
+                                            <div className="text-xs text-gray-500">ID: {t.bookId}</div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div>{t.borrowDate} s/d</div>
+                                            <div className={`font-bold ${isOverdue ? 'text-red-600' : ''}`}>{t.returnDate}</div>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            {t.status === 'dipinjam' ? 
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isOverdue ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-orange-100 text-orange-700'}`}>{isOverdue ? 'Terlambat' : 'Dipinjam'}</span>
+                                                : <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Kembali</span>
+                                            }
+                                        </td>
+                                        <td className="p-4 flex justify-center items-center space-x-2">
+                                            {t.status === 'dipinjam' && (
+                                                <button onClick={() => handleReturn(t.id)} title="Tandai Kembali" className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"><Icons.Check /></button>
+                                            )}
+                                            <button onClick={() => openModal(t)} className="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200"><Icons.Edit /></button>
+                                            <button onClick={() => { setDeleteId(t.id); setConfirmOpen(true); }} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><Icons.Trash /></button>
+                                        </td>
+                                    </tr>
+                                )})}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editId ? "Edit Transaksi" : "Form Peminjaman Buku"}>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="bg-blue-50 p-4 rounded-xl mb-4 border border-blue-100">
+                                <label className="block text-xs font-bold text-gray-700 mb-1">ID Anggota</label>
+                                <input required type="text" value={formData.memberId} onChange={e => setFormData({...formData, memberId: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none focus:border-blue-500 mb-2 uppercase" placeholder="Ketik ID..." />
+                                <div className="text-sm font-semibold text-blue-800 bg-white p-2 rounded border border-blue-200">Nama: {formData.memberName || '-'}</div>
+                            </div>
+
+                            <div className="bg-pink-50 p-4 rounded-xl mb-4 border border-pink-100">
+                                <label className="block text-xs font-bold text-gray-700 mb-1">ID Buku (Fisik)</label>
+                                <input required type="text" value={formData.bookId} onChange={e => setFormData({...formData, bookId: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none focus:border-pink-500 mb-2 uppercase" placeholder="Ketik ID Buku..." />
+                                <div className="text-sm font-semibold text-pink-800 bg-white p-2 rounded border border-pink-200">Judul: {formData.bookTitle || '-'}</div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Tgl Pinjam</label><input required type="date" value={formData.borrowDate} onChange={e => setFormData({...formData, borrowDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Tgl Kembali</label><input required type="date" value={formData.returnDate} onChange={e => setFormData({...formData, returnDate: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1">Status</label>
+                                    <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none">
+                                        <option value="dipinjam">Dipinjam</option>
+                                        <option value="kembali">Kembali</option>
+                                    </select>
+                                </div>
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Keterangan</label><input type="text" value={formData.note} onChange={e => setFormData({...formData, note: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" placeholder="Opsional..." /></div>
+                            </div>
+
+                            <button type="submit" className="w-full bg-orange-600 text-white font-bold py-3 rounded-xl hover:bg-orange-700 transition mt-4">Simpan Transaksi</button>
+                        </form>
+                    </Modal>
+
+                    <ConfirmModal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={handleDelete} title="Hapus Transaksi" message="Hapus catatan transaksi ini secara permanen?" />
+                </div>
+            );
+        };
+
+        const BukuTamu = ({ guests, setGuests, members, showAlert, ConfirmModal, Modal, Icons }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+            
+            const initialForm = { id: '', date: today, time: now, memberId: '', name: '', jabatan: '', purpose: '' };
+            const [formData, setFormData] = useState(initialForm);
+            const [confirmOpen, setConfirmOpen] = useState(false);
+            const [deleteId, setDeleteId] = useState(null);
+
+            useEffect(() => {
+                if(formData.memberId) {
+                    const m = members.find(x => x.id === formData.memberId);
+                    if(m) setFormData(prev => ({ ...prev, name: m.name, jabatan: m.jabatan }));
+                    else setFormData(prev => ({ ...prev, name: '', jabatan: '' }));
+                }
+            }, [formData.memberId, members]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if(!formData.name) {
+                    showAlert("Error", "ID Anggota tidak valid, nama tidak ditemukan.", "error"); return;
+                }
+                setGuests([{...formData, id: Date.now()}, ...guests]);
+                showAlert("Sukses", "Tamu berhasil dicatat.", "success");
+                setIsModalOpen(false);
+            };
+
+            const handleDelete = () => {
+                setGuests(guests.filter(g => g.id !== deleteId));
+                showAlert("Terhapus", "Data tamu dihapus.", "info");
+            };
+
+            return (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-bold text-gray-800 heading-font">Daftar Buku Tamu</h3>
+                        <button onClick={() => { setFormData(initialForm); setIsModalOpen(true); }} className="bg-teal-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-teal-600 transition flex items-center space-x-2">
+                            <Icons.UserPlus /> <span>Isi Buku Tamu</span>
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                        <table className="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 text-gray-700 uppercase font-bold border-b border-gray-200">
+                                    <th className="p-4">Waktu</th>
+                                    <th className="p-4">ID & Nama</th>
+                                    <th className="p-4">Jabatan</th>
+                                    <th className="p-4">Keperluan</th>
+                                    <th className="p-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-gray-700">
+                                {guests.length === 0 ? <tr><td colSpan="5" className="p-4 text-center text-gray-500">Belum ada tamu hari ini</td></tr> : null}
+                                {guests.map(g => (
+                                    <tr key={g.id} className="hover:bg-teal-50/50 transition">
+                                        <td className="p-4 font-semibold">{g.date} <br/><span className="text-teal-600">{g.time}</span></td>
+                                        <td className="p-4 font-bold text-gray-800">{g.name} <br/><span className="text-xs font-normal text-gray-500">ID: {g.memberId}</span></td>
+                                        <td className="p-4">{g.jabatan}</td>
+                                        <td className="p-4">{g.purpose}</td>
+                                        <td className="p-4 flex justify-center">
+                                            <button onClick={() => { setDeleteId(g.id); setConfirmOpen(true); }} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><Icons.Trash /></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Formulir Buku Tamu">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Tanggal</label><input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                                <div><label className="block text-xs font-bold text-gray-700 mb-1">Pukul</label><input required type="time" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" /></div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1">ID Anggota</label>
+                                <input required type="text" value={formData.memberId} onChange={e => setFormData({...formData, memberId: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-teal-500" placeholder="Masukkan ID Anggota..." />
+                            </div>
+
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 grid grid-cols-2 gap-2">
+                                <div><span className="text-xs text-gray-500 block">Nama Otomatis:</span> <span className="font-bold text-sm">{formData.name || '-'}</span></div>
+                                <div><span className="text-xs text-gray-500 block">Jabatan Otomatis:</span> <span className="font-bold text-sm">{formData.jabatan || '-'}</span></div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1">Keperluan</label>
+                                <input required type="text" value={formData.purpose} onChange={e => setFormData({...formData, purpose: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 outline-none" placeholder="Membaca / Pinjam / Lainnya..." />
+                            </div>
+
+                            <button type="submit" className="w-full bg-teal-600 text-white font-bold py-3 rounded-xl hover:bg-teal-700 transition mt-4">Simpan Tamu</button>
+                        </form>
+                    </Modal>
+
+                    <ConfirmModal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={handleDelete} title="Hapus Tamu" message="Hapus catatan tamu ini?" />
+                </div>
+            );
+        };
+
+        const Laporan = ({ members, books, transactions, guests, Icons, formatTanggal }) => {
+            const [tab, setTab] = useState('anggota');
+            const [startDate, setStartDate] = useState('');
+            const [endDate, setEndDate] = useState('');
+
+            const handlePrint = () => { window.print(); };
+
+            // Data filtering based on dates if applicable
+            const filterByDate = (arr, dateField) => {
+                if (!startDate && !endDate) return arr;
+                return arr.filter(item => {
+                    const d = new Date(item[dateField]);
+                    const s = startDate ? new Date(startDate) : new Date('1970-01-01');
+                    const e = endDate ? new Date(endDate) : new Date('2100-01-01');
+                    return d >= s && d <= e;
+                });
+            };
+
+            const filteredTrans = filterByDate(transactions, 'borrowDate');
+            const filteredGuests = filterByDate(guests, 'date');
+
+            // Reports calculations
+            const uniqueTitles = [...new Set(books.map(b => b.title))].length;
+            const booksPerTitle = books.reduce((acc, b) => { acc[b.title] = (acc[b.title] || 0) + 1; return acc; }, {});
+            
+            const countGood = books.filter(b => b.condition === 'baik').length;
+            const countBad = books.length - countGood;
+
+            return (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 print-w-full print-border print:shadow-none print:rounded-none">
+                    
+                    {/* Header Cetak */}
+                    <div className="hidden print-block text-center mb-6 border-b-2 border-black pb-4 print-text-black">
+                        <div className="flex justify-center items-center mb-2 space-x-4">
+                            <CustomLogo className="h-20 w-20 grayscale" />
+                            <div>
+                                <h1 className="text-2xl font-bold uppercase">Perpustakaan Grahita Pustaka</h1>
+                                <p className="text-lg">SDN Ketegan Rejoso</p>
+                            </div>
+                        </div>
+                        <h2 className="text-xl font-bold mt-4 uppercase underline">Laporan {tab.replace(/([A-Z])/g, ' $1').trim()}</h2>
+                        {(startDate || endDate) && <p className="text-sm mt-1">Periode: {startDate ? formatTanggal(startDate) : 'Awal'} s.d {endDate ? formatTanggal(endDate) : 'Sekarang'}</p>}
+                    </div>
+
+                    <div className="print-hidden mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                        <div className="flex space-x-2 bg-gray-100 p-1 rounded-xl overflow-x-auto w-full md:w-auto">
+                            {['anggota', 'katalog', 'transaksi', 'bukuTamu', 'kondisiBuku'].map(t => (
+                                <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-lg font-semibold text-sm capitalize whitespace-nowrap transition ${tab === t ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    {t.replace(/([A-Z])/g, ' $1').trim()}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center space-x-3 w-full md:w-auto">
+                            {(tab === 'transaksi' || tab === 'bukuTamu') && (
+                                <>
+                                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="px-3 py-2 border rounded-lg text-sm" />
+                                    <span className="text-gray-500">-</span>
+                                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="px-3 py-2 border rounded-lg text-sm" />
+                                </>
+                            )}
+                            <button onClick={handlePrint} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center space-x-2">
+                                <Icons.Printer /> <span className="hidden sm:inline">Cetak</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto print-w-full">
+                        {tab === 'anggota' && (
+                            <table className="w-full text-left text-sm print-text-black">
+                                <thead><tr className="bg-gray-100"><th className="p-3">ID Anggota</th><th className="p-3">Nama Anggota</th><th className="p-3">Kelas</th><th className="p-3">Jabatan</th></tr></thead>
+                                <tbody>{members.map(m => <tr key={m.id} className="border-b"><td className="p-3">{m.id}</td><td className="p-3">{m.name}</td><td className="p-3">{m.kelas || '-'}</td><td className="p-3">{m.jabatan}</td></tr>)}</tbody>
+                            </table>
+                        )}
+
+                        {tab === 'katalog' && (
+                            <div>
+                                <div className="mb-4 grid grid-cols-3 gap-4 print-hidden">
+                                    <div className="bg-blue-50 p-4 rounded-xl text-center"><p className="text-xs text-blue-600 font-bold uppercase">Jumlah Judul</p><p className="text-2xl font-bold">{uniqueTitles}</p></div>
+                                    <div className="bg-pink-50 p-4 rounded-xl text-center"><p className="text-xs text-pink-600 font-bold uppercase">Total Buku Fisik</p><p className="text-2xl font-bold">{books.length}</p></div>
+                                </div>
+                                <div className="hidden print-block mb-4">
+                                    <p><strong>Jumlah Judul Buku:</strong> {uniqueTitles}</p>
+                                    <p><strong>Jumlah Buku Keseluruhan:</strong> {books.length}</p>
+                                </div>
+                                <table className="w-full text-left text-sm print-text-black">
+                                    <thead><tr className="bg-gray-100"><th className="p-3">ID</th><th className="p-3">Judul Buku</th><th className="p-3">Pengarang</th><th className="p-3">Penerbit / Thn</th><th className="p-3">Kondisi</th></tr></thead>
+                                    <tbody>{books.map(b => <tr key={b.id} className="border-b"><td className="p-3">{b.id}</td><td className="p-3">{b.title}</td><td className="p-3">{b.author}</td><td className="p-3">{b.publisher} ({b.year})</td><td className="p-3">{b.condition}</td></tr>)}</tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {tab === 'transaksi' && (
+                            <table className="w-full text-left text-sm print-text-black">
+                                <thead><tr className="bg-gray-100"><th className="p-3">ID Anggota</th><th className="p-3">Nama Anggota</th><th className="p-3">ID Buku</th><th className="p-3">Judul Buku</th><th className="p-3">Tgl Pinjam</th><th className="p-3">Tgl Kembali</th><th className="p-3">Status</th></tr></thead>
+                                <tbody>
+                                    {filteredTrans.length === 0 ? <tr><td colSpan="7" className="p-4 text-center">Tidak ada transaksi di periode ini</td></tr> : null}
+                                    {filteredTrans.map(t => <tr key={t.id} className="border-b"><td className="p-3">{t.memberId}</td><td className="p-3">{t.memberName}</td><td className="p-3">{t.bookId}</td><td className="p-3">{t.bookTitle}</td><td className="p-3">{t.borrowDate}</td><td className="p-3">{t.returnDate}</td><td className="p-3">{t.status}</td></tr>)}
+                                </tbody>
+                            </table>
+                        )}
+
+                        {tab === 'bukuTamu' && (
+                            <table className="w-full text-left text-sm print-text-black">
+                                <thead><tr className="bg-gray-100"><th className="p-3">Hari & Tanggal</th><th className="p-3">Waktu</th><th className="p-3">ID Anggota</th><th className="p-3">Nama Anggota</th><th className="p-3">Jabatan</th><th className="p-3">Keperluan</th></tr></thead>
+                                <tbody>
+                                    {filteredGuests.length === 0 ? <tr><td colSpan="6" className="p-4 text-center">Tidak ada tamu di periode ini</td></tr> : null}
+                                    {filteredGuests.map(g => <tr key={g.id} className="border-b"><td className="p-3">{formatTanggal(g.date)}</td><td className="p-3">{g.time}</td><td className="p-3">{g.memberId}</td><td className="p-3">{g.name}</td><td className="p-3">{g.jabatan}</td><td className="p-3">{g.purpose}</td></tr>)}
+                                </tbody>
+                            </table>
+                        )}
+
+                        {tab === 'kondisiBuku' && (
+                            <div>
+                                <div className="mb-4 flex space-x-8 text-sm">
+                                    <p className="font-bold">Total Buku Kondisi Baik: <span className="text-green-600">{countGood}</span></p>
+                                    <p className="font-bold">Total Buku Kondisi Rusak: <span className="text-red-600">{countBad}</span></p>
+                                </div>
+                                <table className="w-full text-left text-sm print-text-black">
+                                    <thead><tr className="bg-gray-100"><th className="p-3">ID Buku</th><th className="p-3">Judul Buku</th><th className="p-3">Kondisi Buku</th></tr></thead>
+                                    <tbody>{books.map(b => <tr key={b.id} className="border-b"><td className="p-3">{b.id}</td><td className="p-3">{b.title}</td><td className="p-3 capitalize">{b.condition}</td></tr>)}</tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
